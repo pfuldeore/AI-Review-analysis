@@ -7,6 +7,7 @@ from nltk.corpus import stopwords
 import re
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+from nltk.sentiment import SentimentIntensityAnalyzer
  
 lemmatizer = WordNetLemmatizer()
 
@@ -16,14 +17,25 @@ try:
     nltk.data.find("tokenizers/punkt")
 except LookupError:
     nltk.download("punkt")
+    
+try:
+    nltk.data.find("tokenizers/punkt_tab")
+except LookupError:
+    nltk.download('punkt_tab')
 
 try:
     nltk.data.find("corpora/stopwords")
 except LookupError:
     nltk.download("stopwords")
+    
+try:
+    nltk.data.find("sentiment/vader_lexicon")
+except LookupError:
+    nltk.download("vader_lexicon")
 
 # Define stopwords for text analysis
 custom_stopwords = set(stopwords.words('english')).union(ENGLISH_STOP_WORDS)
+sia = SentimentIntensityAnalyzer()
 
 def analyze_query(df, query, client, model="llama-3.3-70b-versatile"):
     """Generate and execute Python code for data analysis and return the result."""
@@ -87,7 +99,9 @@ def analyze_query(df, query, client, model="llama-3.3-70b-versatile"):
                 'nltk': nltk,
                 're': re,
                 'word_tokenize': word_tokenize,
-                'lemmatizer': lemmatizer
+                'lemmatizer': lemmatizer,
+                'sia': sia,
+                'SentimentIntensityAnalyzer':SentimentIntensityAnalyzer
             }
             exec_locals = {}
 

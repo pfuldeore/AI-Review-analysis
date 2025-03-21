@@ -4,3 +4,8 @@ seaborn
 matplotlib
 python-dotenv
 transformers
+groq 
+openai
+scikit-learn
+altair
+nltk
