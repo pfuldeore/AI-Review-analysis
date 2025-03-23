@@ -60,9 +60,9 @@ def comparative_analysis(df, station1, station2, client, model="llama-3.3-70b-ve
 
     # Construct DataFrame for comparison
     comparison_df = pd.DataFrame({
-        "Metric": ["Total Reviews", "Average Rating", "Total 5⭐ Ratings", "Total 1⭐ Ratings", "Summary"],
-        station1: [len(df1), round(df1["Rating"].mean(), 2), len(df1[df1["Rating"] == 5]), len(df1[df1["Rating"] == 1]),  summary1],
-        station2: [len(df2), round(df2["Rating"].mean(), 2), len(df2[df2["Rating"] == 5]), len(df2[df2["Rating"] == 1]),  summary2]
+        "Metric": ["Total Reviews", "Average Rating", "Overall Rating", "Total 5⭐ Ratings", "Total 1⭐ Ratings", "Summary"],
+        station1: [len(df1), round(df1["Rating"].mean(), 2), round(df1["Overall_Rating"].mean(), 2), len(df1[df1["Rating"] == 5]), len(df1[df1["Rating"] == 1]),  summary1],
+        station2: [len(df2), round(df2["Rating"].mean(), 2), round(df2["Overall_Rating"].mean(), 2), len(df2[df2["Rating"] == 5]), len(df2[df2["Rating"] == 1]),  summary2]
     })
 
     return comparison_df

@@ -49,16 +49,16 @@ else:
                     "Bottom 3 stores with lowest ratings": "Which are the bottom 3 stores with the lowest average ratings?",
                     "Bottom 5 stores with least reviews": "Which are the bottom 5 stores with the least number of reviews?",
                     "Store with most 1-star ratings": "Which store has the highest number of 1-star ratings?",
-                    "Average rating of a store": "What is the average rating of [store_name]?",
+                    "Average rating of store": "What is the average rating of [store_name]?",
                     "Most frequently reviewed store": "Which store has received the highest number of reviews?",
                     "Sentiment distribution of reviews": "What is the overall sentiment distribution of the reviews?",
-                    "Common words in positive reviews": "What are the most common words in 5-star reviews?",
-                    "Common words in negative reviews": "What are the most common words in 1-star reviews?",
+                    "Common keywords in positive reviews": "What are the most common keywords in 5-star reviews?",
+                    "Common keywords in negative reviews": "What are the most common keywords in 1-star reviews?",
                     "Review trends over time": "How have the number of reviews changed over time?",
                 }
 
             # Layout for predefined query buttons
-            selected_query = st.selectbox("Choose a predefined query:", [""] + list(predefined_queries.keys()))
+            selected_query = st.selectbox("Choose a query:", [""] + list(predefined_queries.keys()))
 
             # Query input area
             query = st.text_area("Or type your own query:", value=predefined_queries.get(selected_query, ""))
@@ -75,9 +75,9 @@ else:
                             st.subheader("Analysis Output:")
                             st.text_area("Result:", value=response, height=200)  # Display text output
                         else:
-                            st.error("Unexpected response format. Please refine your query.")
+                            st.error("Unexpected response format. Please Retry.")
                     except Exception as e:
-                        st.error(f"Error executing analysis: {e}")
+                        st.error(f"Retry. Error executing analysis: {e}")
                 else:
                     st.warning("Please enter a query.")
 
@@ -88,7 +88,6 @@ else:
             visualization_queries = {
                 "Top 5 stores with highest average ratings": "visualize the top 5 stores with highest average ratings.",
                 "Top 5 stores with most reviews": "visualize the top 5 stores with the most number of reviews.",
-                "Store with most 5-star ratings": "visualize the store with the most 5-star ratings.",
                 "Distribution of ratings": "visualize the distribution of ratings across all stores.",
                 "Sentiment distribution of reviews": "visualize the sentiment distribution of reviews.",
                 "Review trends over time": "visualize the number of reviews over time."
@@ -102,7 +101,6 @@ else:
                 "Bar Chart": "bar chart",
                 "Line Chart": "line chart",
                 "Pie Chart": "pie chart",
-                "Histogram": "histogram",
                 "Scatter Plot": "scatter plot"
             }
             selected_chart = st.selectbox("Select chart type:", list(chart_types.keys()))
@@ -140,7 +138,7 @@ else:
             with col1:
                  review_type_filter = st.selectbox(
                 "Review On",
-                ["All", "Staff", "Equipments", "Services", "Cleanliness", "Payment Experience", "Waiting Time", "Fuel Quality"],
+                ["All", "Staff", "Equipments", "Services", "Cleanliness", "Payments", "Waiting Time", "Fuel Quality"],
             )
             # Place the second selectbox in the second column
             with col2:

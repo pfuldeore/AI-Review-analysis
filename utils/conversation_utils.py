@@ -34,7 +34,15 @@ except LookupError:
     nltk.download("vader_lexicon")
 
 # Define stopwords for text analysis
-custom_stopwords = set(stopwords.words('english')).union(ENGLISH_STOP_WORDS)
+custom_stopwords = {
+    "the", "and", "to", "of", "a", "in", "is", "for", "on", "it",
+    "with", "this", "at", "was", "as", "but", "if", "or", "so",
+    "be", "by", "an", "are", "that", "has", "had", "have", "not",
+    "they", "you", "your", "we", "our", "can", "will", "would",
+    "should", "could", "there", "their", "them", "been", "some",
+    "just", "than", "then", "more", "when", "where", "which",
+    "one", "all", "out", "about", "up", "i"
+}
 sia = SentimentIntensityAnalyzer()
 
 def analyze_query(df, query, client, model="llama-3.3-70b-versatile"):
@@ -53,11 +61,13 @@ def analyze_query(df, query, client, model="llama-3.3-70b-versatile"):
 
     **Important Notes:**
     1. The dataset is stored in a variable called `df`.
-    2. Handle missing values (NaN) appropriately before processing.
-    3. Ensure the output is stored in a variable called `result` (e.g., `result = df.describe()`).
-    4. Do not include print statements, explanations, markdown formatting, or anything except valid Python code.
-    5. Do not include stopwords in the keyword analysis
-    6. Please provide the following data in a proper dataframe format
+    2. Ignore all the warnings
+    3. Generate a final answer in dataframe for all kind of queries
+    4. Handle missing values (NaN) appropriately before processing.
+    5. Ensure the output is stored in a variable called `result` (e.g., `result = df.describe()`).
+    6. Do not include print statements, explanations, markdown formatting, or anything except valid Python code.
+    7. Do not include stopwords in the keyword analysis. Use nltk.download('stopwords')
+    8. Please provide the following data in a proper dataframe format 
     """
 
         if hasattr(client, "chat"):  # Groq Client
@@ -94,7 +104,6 @@ def analyze_query(df, query, client, model="llama-3.3-70b-versatile"):
                 'np': np,
                 'df': df,
                 'Counter': Counter,
-                'ENGLISH_STOP_WORDS': ENGLISH_STOP_WORDS,
                 'stop_words': custom_stopwords,
                 'nltk': nltk,
                 're': re,
@@ -111,9 +120,9 @@ def analyze_query(df, query, client, model="llama-3.3-70b-versatile"):
             except Exception as exec_error:
                 return f"Error executing generated code: {exec_error}"
 
-            print("Exec Locals:", exec_locals.keys())  # Debugging
-
             result = exec_locals.get("result", None)
+            
+            print("result:", result)  # Debugging
 
             # **Handle Different Response Formats**
             if isinstance(result, pd.DataFrame):
