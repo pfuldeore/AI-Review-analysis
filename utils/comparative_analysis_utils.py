@@ -42,15 +42,16 @@ def comparative_analysis(df, station1, station2, client, model="llama-3.3-70b-ve
 
     Based on these keywords, refine this into a single sentence summary for each station. Do not add any preamble. 
     """
-
-    if hasattr(client, "chat"):  # Groq Client
+    client_name = client.__class__.__name__.lower()
+    
+    if "groq" in client_name:  # Groq Client
         response = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
                 model=model,
                 max_tokens=500
             )
     else:  # OpenAI Client
-        response = client.ChatCompletion.create(
+        response = client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="gpt-4-turbo", 
                 max_tokens=500

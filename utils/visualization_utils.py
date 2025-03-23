@@ -53,8 +53,9 @@ def visualize_query(df, query, client, model="llama-3.3-70b-versatile"):
     2. Ensure the code is robust and does not fail if the dataset contains missing values.
     3. Do not include stopwords in the keyword analysis 
     """
-
-        if hasattr(client, "chat"):  # Groq Client
+        client_name = client.__class__.__name__.lower()
+        
+        if "groq" in client_name: # Groq Client
             response = client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant. Provide only executable Python code for generating plots. Do not include any explanations or additional text."},
@@ -64,7 +65,7 @@ def visualize_query(df, query, client, model="llama-3.3-70b-versatile"):
                 max_tokens=500
             )
         else:  # OpenAI Client
-            response = client.ChatCompletion.create(
+            response = client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant. Provide only executable Python code for generating plots. Do not include any explanations or additional text."},
                     {"role": "user", "content": prompt}

@@ -17,12 +17,12 @@ st.title("🤖 Shell Store Reviews Chatbot")
 
 # Sidebar for API key selection
 st.sidebar.header("Settings")
-api_provider = st.sidebar.radio("Select LLM API Provider", ["Groq (Opensource)", "OpenAI (Paid)"])
+api_provider = st.sidebar.radio("Select LLM API Provider", ["Groq", "OpenAI"])
 
-if api_provider == "Groq (Opensource)":
+if api_provider == "Groq":
     api_key = os.getenv("groq_API_KEY")
     client = initialize_groq_client(api_key) if api_key else None
-elif api_provider == "OpenAI (Paid)":
+elif api_provider == "OpenAI":
     api_key = st.sidebar.text_input("Enter OpenAI API Key", type="password")
     client = initialize_openai_client(api_key) if api_key else None
 

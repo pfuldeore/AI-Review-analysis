@@ -45,7 +45,7 @@ custom_stopwords = {
 }
 sia = SentimentIntensityAnalyzer()
 
-def analyze_query(df, query, client, model="llama-3.3-70b-versatile"):
+def analyze_query(df, query, client):
     """Generate and execute Python code for data analysis and return the result."""
     if query:
         prompt = f"""
@@ -68,19 +68,20 @@ def analyze_query(df, query, client, model="llama-3.3-70b-versatile"):
     6. Do not include print statements, explanations, markdown formatting, or anything except valid Python code.
     7. Do not include stopwords in the keyword analysis. Use nltk.download('stopwords')
     8. Please provide the following data in a proper dataframe format 
-    """
+    """ 
+        client_name = client.__class__.__name__.lower()
 
-        if hasattr(client, "chat"):  # Groq Client
+        if "groq" in client_name:  # Groq Client
             response = client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant. Provide only executable Python code for data analysis. Do not include any explanations or additional text."},
                     {"role": "user", "content": prompt}
                 ],
-                model=model, 
+                model="llama-3.3-70b-versatile", 
                 max_tokens=500
             )
         else:  # OpenAI Client
-            response = client.ChatCompletion.create(
+            response = client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant. Provide only executable Python code for data analysis. Do not include any explanations or additional text."},
                     {"role": "user", "content": prompt}
