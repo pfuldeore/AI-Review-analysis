@@ -52,6 +52,7 @@ def visualize_query(df, query, client, model="llama-3.3-70b-versatile"):
     1. Handle missing values (NaN) in any text column by replacing them with empty strings before processing.
     2. Ensure the code is robust and does not fail if the dataset contains missing values.
     3. Do not include stopwords in the keyword analysis 
+    4. Specify a type of encoding field 
     """
         client_name = client.__class__.__name__.lower()
         
