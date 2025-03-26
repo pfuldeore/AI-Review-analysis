@@ -13,7 +13,6 @@ REVIEW_TYPE_KEYWORDS = {
     "Equipments": ["equipment", "machine", "pump", "dispenser", "functioning", "broken", "modern", "outdated"],
     "Services": ["service", "assistance", "support", "quality", "efficient", "slow", "professional", "care"],
     "Cleanliness": ["clean", "dirty", "hygiene", "sanitation", "messy", "tidy", "neat", "filthy"],
-    "Payment Experience": ["payment", "card", "cash", "digital", "transaction", "easy", "difficult", "smooth"],
     "Waiting Time": ["wait", "time", "queue", "long", "short", "delay", "fast", "slow"],
     "Fuel Quality": ["fuel", "petrol", "diesel", "quality", "pure", "adulterated", "efficient", "performance"],
 }

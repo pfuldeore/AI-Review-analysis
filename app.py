@@ -138,7 +138,7 @@ else:
             with col1:
                  review_type_filter = st.selectbox(
                 "Review On",
-                ["All", "Staff", "Equipments", "Services", "Cleanliness", "Payments", "Waiting Time", "Fuel Quality"],
+                ["All", "Staff", "Equipments", "Services", "Cleanliness", "Waiting Time", "Fuel Quality"],
             )
             # Place the second selectbox in the second column
             with col2:
