@@ -1,23 +1,30 @@
 import pandas as pd
 import numpy as np
 from collections import Counter
-from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS, CountVectorizer, TfidfVectorizer
 import nltk
 from nltk.corpus import stopwords
 import re
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.sentiment import SentimentIntensityAnalyzer
- 
-lemmatizer = WordNetLemmatizer()
+from nltk.util import ngrams
+import spacy
 
+lemmatizer = WordNetLemmatizer()
+nlp = spacy.load("en_core_web_sm")  # Load spaCy model for phrase extraction
 
 # Ensure necessary NLTK resources are available
-try:
+try:    
     nltk.data.find("tokenizers/punkt")
 except LookupError:
     nltk.download("punkt")
-
+    
+try:    
+    nltk.data.find("tokenizers/punkt")
+except LookupError:
+    nltk.download("punkt_tab")
+    
 try:
     nltk.data.find("corpora/stopwords")
 except LookupError:
@@ -29,16 +36,15 @@ except LookupError:
     nltk.download("vader_lexicon")
 
 # Define stopwords for text analysis
-custom_stopwords = {
-    "the", "and", "to", "of", "a", "in", "is", "for", "on", "it",
-    "with", "this", "at", "was", "as", "but", "if", "or", "so",
-    "be", "by", "an", "are", "that", "has", "had", "have", "not",
-    "they", "you", "your", "we", "our", "can", "will", "would",
-    "should", "could", "there", "their", "them", "been", "some",
-    "just", "than", "then", "more", "when", "where", "which",
-    "one", "all", "out", "about", "up", "i"
-}
+custom_stopwords = ENGLISH_STOP_WORDS
 sia = SentimentIntensityAnalyzer()
+
+def extract_phrases(text_series, ngram_range=(2,3)):
+    """Extracts common phrases (bigrams and trigrams) instead of single words."""
+    vectorizer = CountVectorizer(ngram_range=ngram_range, stop_words="english")
+    X = vectorizer.fit_transform(text_series.dropna())
+    phrases = Counter(vectorizer.get_feature_names_out())
+    return phrases.most_common(5)  # Return top 5 phrases
 
 def analyze_query(df, query, client):
     """Generate and execute Python code for data analysis and return the result."""
@@ -57,12 +63,13 @@ def analyze_query(df, query, client):
     **Important Notes:**
     1. The dataset is stored in a variable called `df`.
     2. Ignore all the warnings
-    3. Generate a final answer in dataframe for all kind of queries
+    3. Generate a final answer in dataframe for all kinds of queries
     4. Handle missing values (NaN) appropriately before processing.
     5. Ensure the output is stored in a variable called `result` (e.g., `result = df.describe()`).
     6. Do not include print statements, explanations, markdown formatting, or anything except valid Python code.
-    7. Do not include stopwords in the keyword analysis. Use nltk.download('stopwords')
-    8. Please provide the following data in a proper dataframe format 
+    7. If the query involves identifying the top issues in reviews, extract **key complaint phrases** using NLP techniques like **n-grams (bigrams/trigrams) or named entity recognition (NER)**.
+    8. Remove stopwords and apply lemmatization before analysis.
+    9. Please provide the following data in a proper dataframe format.
     """ 
         client_name = client.__class__.__name__.lower()
 
@@ -73,7 +80,7 @@ def analyze_query(df, query, client):
                     {"role": "user", "content": prompt}
                 ],
                 model="llama-3.3-70b-versatile", 
-                max_tokens=500
+                max_tokens=800
             )
         else:  # OpenAI Client
             response = client.chat.completions.create(
@@ -82,7 +89,7 @@ def analyze_query(df, query, client):
                     {"role": "user", "content": prompt}
                 ],
                 model="gpt-4-turbo", 
-                max_tokens=500
+                max_tokens=800
             )
 
         code_snippet = response.choices[0].message.content.strip()
@@ -101,12 +108,19 @@ def analyze_query(df, query, client):
                 'df': df,
                 'Counter': Counter,
                 'stop_words': custom_stopwords,
+                'stopwords': custom_stopwords,
                 'nltk': nltk,
                 're': re,
                 'word_tokenize': word_tokenize,
+                'WordNetLemmatizer': WordNetLemmatizer,
                 'lemmatizer': lemmatizer,
                 'sia': sia,
-                'SentimentIntensityAnalyzer':SentimentIntensityAnalyzer
+                'SentimentIntensityAnalyzer': SentimentIntensityAnalyzer,
+                'TfidfVectorizer': TfidfVectorizer,
+                'CountVectorizer': CountVectorizer,
+                'extract_phrases': extract_phrases,
+                'nlp': nlp,
+                'ngrams':ngrams
             }
             exec_locals = {}
 
@@ -122,9 +136,12 @@ def analyze_query(df, query, client):
 
             # **Handle Different Response Formats**
             if isinstance(result, pd.DataFrame):
+                # Ensure unique column names
+                result.columns = [f"{col}_{i}" if list(result.columns).count(col) > 1 else col 
+                                  for i, col in enumerate(result.columns)]
                 return result  # Directly return DataFrame
             elif isinstance(result, list) and all(isinstance(i, tuple) and len(i) == 2 for i in result):
-                return pd.DataFrame(result, columns=["Keyword", "Frequency"])  # Convert list of tuples to DataFrame
+                return pd.DataFrame(result, columns=["Issue", "Frequency"])  # Convert list of tuples to DataFrame
             elif isinstance(result, (int, float, str, list, dict)):
                 return result  # Return as-is for non-DataFrame responses
             else:
@@ -135,5 +152,3 @@ def analyze_query(df, query, client):
 
     else:
         return "Please write a relevant query for data analysis."
-
-

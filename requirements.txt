@@ -9,3 +9,4 @@ openai
 scikit-learn
 altair
 nltk
+spacy
