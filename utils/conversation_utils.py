@@ -19,6 +19,11 @@ try:
 except LookupError:
     nltk.download("punkt")
     
+try:    
+    nltk.data.find("tokenizers/punkt")
+except LookupError:
+    nltk.download("punkt_tab")
+    
 try:
     nltk.data.find("corpora/stopwords")
 except LookupError:
@@ -42,36 +47,39 @@ def extract_phrases(text_series, ngram_range=(2,3)):
 
 def preprocess_text(text):
     """Preprocess text by tokenizing, removing stopwords, and lemmatizing."""
+    if not isinstance(text, str):
+        return ""
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text.lower())  # Remove special characters
     tokens = word_tokenize(text)
     tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in custom_stopwords]
-    return ' '.join(tokens)
+    return ' '.join(tokens)  # Return as string
 
 def analyze_query(df, query, client):
     """Generate and execute Python code for data analysis and return the result."""
     if query:
         prompt = f"""
-    The following is a dataset:
-    {df.head()}
+        The following is a dataset:
+        {df.head()}
 
-    The dataset contains the following columns: {df.columns.tolist()}
+        The dataset contains the following columns: {df.columns.tolist()}
 
-    User query: {query}
+        User query: {query}
 
-    Provide **only the Python code** to analyze the dataset based on the query.
-    The code must be executable and should use pandas and NumPy if needed. 
+        Provide **only the Python code** to analyze the dataset based on the query.
+        The code must be executable and should use pandas and NumPy if needed. 
 
-    **Important Notes:**
-    1. The dataset is stored in a variable called `df`.
-    2. Ignore all the warnings
-    3. Generate a final answer in dataframe for all kinds of queries
-    4. Handle missing values (NaN) appropriately before processing.
-    5. Ensure the output is stored in a variable called `result` (e.g., `result = df.describe()`).
-    6. Do not include print statements, explanations, markdown formatting, or anything except valid Python code.
-    7. If the query involves identifying the top issues in reviews, extract **key complaint phrases** using NLP techniques like **n-grams (bigrams/trigrams)**.
-    8. Remove stopwords and apply lemmatization before analysis.
-    9. Please provide the following data in a proper dataframe format.
-    """ 
+        **Important Notes:**
+        1. The dataset is stored in a variable called `df`.
+        2. A preprocess_text() function is already available - DO NOT redefine it.
+        3. Ignore all the warnings
+        4. Generate a final answer in dataframe for all kinds of queries
+        5. Handle missing values (NaN) appropriately before processing.
+        6. Ensure the output is stored in a variable called `result` (e.g., `result = df.describe()`).
+        7. Do not include print statements, explanations, markdown formatting, or anything except valid Python code.
+        8. If the query involves identifying the top issues in reviews, extract **key complaint phrases** using NLP techniques like **n-grams (bigrams/trigrams)** from reviews with ratings<2.
+        9. Remove stopwords and apply lemmatization before analysis.
+        10. Please provide the following data in a proper dataframe format.
+        """
         client_name = client.__class__.__name__.lower()
 
         if "groq" in client_name:  # Groq Client
@@ -120,7 +128,10 @@ def analyze_query(df, query, client):
                 'TfidfVectorizer': TfidfVectorizer,
                 'CountVectorizer': CountVectorizer,
                 'extract_phrases': extract_phrases,
-                'ngrams': ngrams
+                'ngrams': ngrams,
+                'ENGLISH_STOP_WORDS': ENGLISH_STOP_WORDS,
+                'preprocess_text': preprocess_text,  # Make sure this is included
+                'custom_stopwords': custom_stopwords  # Add this if missing
             }
             exec_locals = {}
 
@@ -128,26 +139,31 @@ def analyze_query(df, query, client):
             try:
                 exec(code_snippet, exec_globals, exec_locals)
             except Exception as exec_error:
-                return f"Error executing generated code: {exec_error}"
+                return f"Error executing generated code: {str(exec_error)}\nGenerated code was:\n{code_snippet}"
 
             result = exec_locals.get("result", None)
             
             print("result:", result)  # Debugging
 
-            # **Handle Different Response Formats**
+            # Handle Different Response Formats
             if isinstance(result, pd.DataFrame):
                 result.columns = [f"{col}_{i}" if list(result.columns).count(col) > 1 else col 
                                   for i, col in enumerate(result.columns)]
                 return result
-            elif isinstance(result, list) and all(isinstance(i, tuple) and len(i) == 2 for i in result):
-                return pd.DataFrame(result, columns=["Issue", "Frequency"])
-            elif isinstance(result, (int, float, str, list, dict)):
-                return result
+            elif isinstance(result, list):
+                if all(isinstance(i, tuple) and len(i) == 2 for i in result):
+                    return pd.DataFrame(result, columns=["Issue", "Frequency"])
+                else:
+                    return pd.DataFrame({"Result": result})
+            elif isinstance(result, (int, float, str)):
+                return pd.DataFrame({"Result": [result]})
+            elif isinstance(result, dict):
+                return pd.DataFrame(list(result.items()), columns=["Key", "Value"])
             else:
                 return "Error: No valid output generated. The code may not have created a 'result' variable."
 
         except Exception as e:
-            return f"Error executing the analysis: {e}"
+            return f"Error executing the analysis: {str(e)}\nGenerated code was:\n{code_snippet}"
 
     else:
         return "Please write a relevant query for data analysis."
