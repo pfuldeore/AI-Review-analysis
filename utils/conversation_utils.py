@@ -9,30 +9,15 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk.util import ngrams
-import spacy
 
+# Initialize lemmatizer
 lemmatizer = WordNetLemmatizer()
-
-import spacy
-import subprocess
-
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
-    nlp = spacy.load("en_core_web_sm")
-
 
 # Ensure necessary NLTK resources are available
 try:    
     nltk.data.find("tokenizers/punkt")
 except LookupError:
     nltk.download("punkt")
-    
-try:    
-    nltk.data.find("tokenizers/punkt")
-except LookupError:
-    nltk.download("punkt_tab")
     
 try:
     nltk.data.find("corpora/stopwords")
@@ -45,7 +30,7 @@ except LookupError:
     nltk.download("vader_lexicon")
 
 # Define stopwords for text analysis
-custom_stopwords = ENGLISH_STOP_WORDS
+custom_stopwords = stopwords.words('english') + list(ENGLISH_STOP_WORDS)
 sia = SentimentIntensityAnalyzer()
 
 def extract_phrases(text_series, ngram_range=(2,3)):
@@ -54,6 +39,13 @@ def extract_phrases(text_series, ngram_range=(2,3)):
     X = vectorizer.fit_transform(text_series.dropna())
     phrases = Counter(vectorizer.get_feature_names_out())
     return phrases.most_common(5)  # Return top 5 phrases
+
+def preprocess_text(text):
+    """Preprocess text by tokenizing, removing stopwords, and lemmatizing."""
+    text = re.sub(r'[^a-zA-Z0-9\s]', '', text.lower())  # Remove special characters
+    tokens = word_tokenize(text)
+    tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in custom_stopwords]
+    return ' '.join(tokens)
 
 def analyze_query(df, query, client):
     """Generate and execute Python code for data analysis and return the result."""
@@ -76,7 +68,7 @@ def analyze_query(df, query, client):
     4. Handle missing values (NaN) appropriately before processing.
     5. Ensure the output is stored in a variable called `result` (e.g., `result = df.describe()`).
     6. Do not include print statements, explanations, markdown formatting, or anything except valid Python code.
-    7. If the query involves identifying the top issues in reviews, extract **key complaint phrases** using NLP techniques like **n-grams (bigrams/trigrams) or named entity recognition (NER)**.
+    7. If the query involves identifying the top issues in reviews, extract **key complaint phrases** using NLP techniques like **n-grams (bigrams/trigrams)**.
     8. Remove stopwords and apply lemmatization before analysis.
     9. Please provide the following data in a proper dataframe format.
     """ 
@@ -128,8 +120,7 @@ def analyze_query(df, query, client):
                 'TfidfVectorizer': TfidfVectorizer,
                 'CountVectorizer': CountVectorizer,
                 'extract_phrases': extract_phrases,
-                'nlp': nlp,
-                'ngrams':ngrams
+                'ngrams': ngrams
             }
             exec_locals = {}
 
@@ -145,14 +136,13 @@ def analyze_query(df, query, client):
 
             # **Handle Different Response Formats**
             if isinstance(result, pd.DataFrame):
-                # Ensure unique column names
                 result.columns = [f"{col}_{i}" if list(result.columns).count(col) > 1 else col 
                                   for i, col in enumerate(result.columns)]
-                return result  # Directly return DataFrame
+                return result
             elif isinstance(result, list) and all(isinstance(i, tuple) and len(i) == 2 for i in result):
-                return pd.DataFrame(result, columns=["Issue", "Frequency"])  # Convert list of tuples to DataFrame
+                return pd.DataFrame(result, columns=["Issue", "Frequency"])
             elif isinstance(result, (int, float, str, list, dict)):
-                return result  # Return as-is for non-DataFrame responses
+                return result
             else:
                 return "Error: No valid output generated. The code may not have created a 'result' variable."
 
