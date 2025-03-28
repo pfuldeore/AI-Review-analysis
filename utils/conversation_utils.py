@@ -9,6 +9,8 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk.util import ngrams
+from textblob import TextBlob
+import string
 
 # Initialize lemmatizer
 lemmatizer = WordNetLemmatizer()
@@ -28,6 +30,8 @@ try:
     nltk.data.find("corpora/stopwords")
 except LookupError:
     nltk.download("stopwords")
+    
+nltk.download("wordnet")
     
 try:
     nltk.data.find("sentiment/vader_lexicon")
@@ -79,6 +83,8 @@ def analyze_query(df, query, client):
         8. If the query involves identifying the top issues in reviews, extract **key complaint phrases** using NLP techniques like **n-grams (bigrams/trigrams)** from reviews with ratings<2.
         9. Remove stopwords and apply lemmatization before analysis.
         10. Please provide the following data in a proper dataframe format.
+        11. Use `word_tokenize` from nltk.tokenize for tokenization
+        12. Do not use punkt_tab tokenizer
         """
         client_name = client.__class__.__name__.lower()
 
@@ -129,6 +135,8 @@ def analyze_query(df, query, client):
                 'CountVectorizer': CountVectorizer,
                 'extract_phrases': extract_phrases,
                 'ngrams': ngrams,
+                'string':string,
+                'TextBlob':TextBlob,
                 'ENGLISH_STOP_WORDS': ENGLISH_STOP_WORDS,
                 'preprocess_text': preprocess_text,  # Make sure this is included
                 'custom_stopwords': custom_stopwords  # Add this if missing
