@@ -51,9 +51,6 @@ else:
                     "Store with most 1-star ratings": "Which store has the highest number of 1-star ratings?",
                     "Average rating of store": "What is the average rating of [store_name]?",
                     "Most frequently reviewed store": "Which store has received the highest number of reviews?",
-                    "Sentiment distribution of reviews": "What is the overall sentiment distribution of the reviews?",
-                    "Common keywords in positive reviews": "What are the most common keywords in 5-star reviews?",
-                    "Common keywords in negative reviews": "What are the most common keywords in 1-star reviews?",
                     "Review trends over time": "How have the number of reviews changed over time?",
                 }
 
